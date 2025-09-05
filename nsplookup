@@ -1,0 +1,14 @@
+#!/bin/sh
+######################
+# Tsali/Rai   #
+# IH v0.1 2025/04/15 #
+# IH v0.2 2025/07/25 #
+# IP/Host Lookup     #
+# usage: id <query>  #
+######################
+
+# Escapes any regular expression characters such as /'$ etc.. and creates a new variable
+ESCAPED_REPLACE=$(printf '%s\n' "$1" | sed -e 's/[&]/\\&/g')
+
+# Updated 2025/7/25 to properly space out the tabs for the columns using the ,'s as the seperator (Common in CSV files) and then ignoring the ,'s if they're located within double quotes like "123 test streeet, Chicago, IL"
+awk -v pat="$ESCAPED_REPLACE" 'BEGIN{IGNORECASE=1} function split_csv(l,a, i,c,q,f,ch){f="";q=0;n=0;for(i=1;i<=length(l);i++){ch=substr(l,i,1);if(ch=="\""){q=!q;f=f ch}else if(ch==","&&!q){a[++n]=f;f=""}else{f=f ch}}a[++n]=f;return n} NR==1||$0~pat{n=split_csv($0,f);for(i=1;i<=n;i++){gsub(/^[ \t]+|[ \t]+$/, "", f[i]);data[NR,i]=f[i];if(length(f[i])>max[i])max[i]=length(f[i])}if(n>maxNF)maxNF=n;rows[NR]=1} END{for(r=1;r<=NR;r++){if(!(r in rows))continue;for(c=1;c<=maxNF;c++)printf "%-*s", max[c]+2, data[r,c];print ""}}' ~/.hosts
